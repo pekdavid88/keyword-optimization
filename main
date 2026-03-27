@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Kulcsszó Sűrűség Kalkulátor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Kulcsszó Kalkulátor</h1>
+            <p class="text-slate-600 mt-2">Számold ki az optimális előfordulási számokat az erősségek alapján.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Bal oldal: Bemenetek -->
+            <div class="card p-6 space-y-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-4 text-slate-700 flex items-center border-b pb-2">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
+                        Beállítások
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Cél összdarabszám</label>
+                        <input type="number" id="totalTarget" value="31" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition font-bold text-lg" placeholder="Pl: 100">
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Ennyi kulcsszónak kell összesen szerepelnie a szövegben.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Kulcsszavak és erősségek</label>
+                        <textarea id="keywordInput" rows="10" class="w-full p-3 border border-slate-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-slate-50" placeholder="Példa:
+retro mikrohullámú sütő 260
+vintage mikrohullámú sütő 110
+rusztikus mikrohullámú sütő 90">retro mikrohullámú sütő 260
+vintage mikrohullámú sütő 110
+rusztikus mikrohullámú sütő 90
+retro mikró 90
+mikrohullámú sütő retro 40</textarea>
+                        <p class="text-[10px] text-slate-400 mt-1">Formátum: Kulcsszó neve [szóköz] erősség</p>
+                    </div>
+
+                    <button onclick="calculate()" class="w-full bg-slate-800 hover:bg-black text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform active:scale-[0.98] shadow-lg">
+                        Számítás futtatása
+                    </button>
+                </div>
+            </div>
+
+            <!-- Jobb oldal: Eredmények -->
+            <div class="card p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-700 flex items-center border-b pb-2">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012-2"></path></svg>
+                    Optimális mennyiség
+                </h2>
+                
+                <div id="resultsArea">
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                        <svg class="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p>Kattints a számításra!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const targetCount = parseInt(document.getElementById('totalTarget').value) || 0;
+            const inputText = document.getElementById('keywordInput').value.trim();
+            const resultsArea = document.getElementById('resultsArea');
+
+            if (!inputText || targetCount <= 0) {
+                resultsArea.innerHTML = '<div class="p-4 bg-red-50 text-red-600 rounded-lg text-sm">Adj meg érvényes cél-számot és kulcsszavakat!</div>';
+                return;
+            }
+
+            const lines = inputText.split('\n');
+            let keywords = [];
+            let totalStrength = 0;
+
+            lines.forEach(line => {
+                // Regex a kulcsszó végén lévő utolsó szám kinyerésére (erősség)
+                const match = line.trim().match(/(.+)\s+(\d+)$/);
+                if (match) {
+                    const name = match[1].trim();
+                    const strength = parseInt(match[2]);
+                    keywords.push({ name, strength });
+                    totalStrength += strength;
+                }
+            });
+
+            if (keywords.length === 0) {
+                resultsArea.innerHTML = '<div class="p-4 bg-red-50 text-red-600 rounded-lg text-sm">Hibás formátum! Soronként: "Név Erősség"</div>';
+                return;
+            }
+
+            let html = `
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-2 text-xs uppercase font-bold text-slate-500 tracking-widest">
+                        <span>Összesített erősség</span>
+                        <span class="text-slate-800">${totalStrength}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div class="bg-blue-500 h-full w-full opacity-50"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+            `;
+
+            keywords.forEach(kw => {
+                // Arányosítás: (Erősség / Összes Erősség) * Cél összdarabszám
+                const ratio = kw.strength / totalStrength;
+                const ideal = ratio * targetCount;
+                const idealRounded = Math.round(ideal);
+                const percent = (ratio * 100).toFixed(1);
+
+                html += `
+                    <div class="p-4 border border-slate-100 rounded-xl bg-slate-50 hover:border-blue-200 transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">${kw.name}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">Súlyozás: ${kw.strength} (${percent}%)</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black text-blue-600 leading-none">${idealRounded} <span class="text-xs font-normal text-slate-400 italic">db</span></div>
+                                <div class="text-[9px] text-slate-400 mt-1">Pontos: ${ideal.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+                <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <p class="text-xs text-blue-700 text-center leading-relaxed">
+                        Az eloszlás a <b>${totalStrength}</b> összerősséget vetíti rá a <b>${targetCount}</b> darabos keretre.
+                    </p>
+                </div>
+            `;
+
+            resultsArea.innerHTML = html;
+        }
+
+        // Automatikus indulás a példa adatokkal
+        window.onload = calculate;
+    </script>
+</body>
+</html>
